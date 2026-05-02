@@ -1,0 +1,25 @@
+Ticker,Asset Type,Reality Score,Price Score,Mispricing Gap,Recommendation,Simple Explanation
+AAPL,Stock,,0.5062920715433977,,Hold,Business strength and price behavior look reasonably balanced.
+MSFT,Stock,0.635119247116473,0.22283778165405882,0.41228146546241423,Increase,Business strength looks better than market price reaction. Possible long-term opportunity.
+NVDA,Stock,0.8288012461185876,0.5012413786254447,0.3275598674931429,Increase,Business strength looks better than market price reaction. Possible long-term opportunity.
+AMZN,Stock,0.4886524242832427,0.3918823676067532,0.09677005667648947,Hold,Business strength and price behavior look reasonably balanced.
+GOOGL,Stock,0.6972977655457175,0.7044280106402847,-0.007130245094567167,Hold,Business strength and price behavior look reasonably balanced.
+META,Stock,0.6518123330002867,0.16104770769683033,0.49076462530345644,Increase,Business strength looks better than market price reaction. Possible long-term opportunity.
+TSLA,Stock,0.2660643209862269,0.1928859161606269,0.07317840482560001,Hold,Business strength and price behavior look reasonably balanced.
+JPM,Stock,,0.2865330104836514,,Hold,Business strength and price behavior look reasonably balanced.
+XOM,Stock,0.4517709692776237,0.5066071854031969,-0.05483621612557321,Hold,Business strength and price behavior look reasonably balanced.
+JNJ,Stock,0.42775536834730876,0.49612393237164154,-0.06836856402433278,Hold,Business strength and price behavior look reasonably balanced.
+VFIAX,Mutual Fund,,0.5272557723670113,,Hold,Asset looks stable enough to hold for diversification.
+VTSAX,Mutual Fund,,0.5270818582664369,,Hold,Asset looks stable enough to hold for diversification.
+VBTLX,Mutual Fund,,0.4794366459695918,,Hold,Asset looks stable enough to hold for diversification.
+VIMAX,Mutual Fund,,0.5124972530501113,,Hold,Asset looks stable enough to hold for diversification.
+VSMAX,Mutual Fund,,0.5272331656334196,,Hold,Asset looks stable enough to hold for diversification.
+VGSLX,Mutual Fund,,0.5220182148293676,,Hold,Asset looks stable enough to hold for diversification.
+VTIAX,Mutual Fund,,0.512698180990921,,Hold,Asset looks stable enough to hold for diversification.
+GLD,Other Asset,,0.4407482908962856,,Hold,Asset looks stable enough to hold for diversification.
+SLV,Other Asset,,0.4877165435552418,,Hold,Asset looks stable enough to hold for diversification.
+USO,Other Asset,,0.7959025675269209,,Increase / Keep Strong,Asset shows strong price trend with acceptable risk.
+TLT,Other Asset,,0.4571401974326875,,Hold,Asset looks stable enough to hold for diversification.
+BND,Other Asset,,0.4818306521518363,,Hold,Asset looks stable enough to hold for diversification.
+BTC-USD,Other Asset,,0.23123468909041212,,Reduce / Watch,Asset shows weak price behavior or higher risk.
+ETH-USD,Other Asset,,0.1582179250896992,,Reduce / Watch,Asset shows weak price behavior or higher risk.
