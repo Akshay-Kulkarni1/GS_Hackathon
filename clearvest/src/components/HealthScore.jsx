@@ -41,13 +41,13 @@ export default function HealthScore({ score = 74 }) {
 
   // Get message based on score
   const getMessage = (s) => {
-    if (s >= 70) return "Your portfolio is doing well! Small adjustments can make it even better.";
-    if (s >= 50) return "Your portfolio is okay, but there's room for improvement.";
-    return "Your portfolio needs attention. Let's look at ways to strengthen it.";
+    if (s >= 70) return "Your money plan is in a good place. Small updates can make it even stronger.";
+    if (s >= 50) return "Your money plan is stable, with a few areas to improve.";
+    return "Your money plan needs attention. Let's make it stronger step by step.";
   };
 
   return (
-    <div className={`rounded-3xl ${color.bg} border border-gray-100 p-8 animate-slide-up`}>
+    <div className={`rounded-2xl ${color.bg} border border-gray-100 p-8 animate-slide-up`}>
       <div className="flex flex-col sm:flex-row items-center gap-6 sm:gap-8">
         {/* Circular score */}
         <div className="relative flex-shrink-0">
@@ -89,7 +89,7 @@ export default function HealthScore({ score = 74 }) {
 
         {/* Label + description */}
         <div className="text-center sm:text-left flex-1">
-          <h3 className="text-lg font-bold text-gray-800 mb-1">Your Portfolio Health</h3>
+          <h3 className="text-lg font-bold text-gray-800 mb-1">Your Money Health Score</h3>
           <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${color.bg} ${color.label} mb-3`}>
             {score >= 70 ? '● Healthy' : score >= 50 ? '● Moderate' : '● Needs Attention'}
           </div>

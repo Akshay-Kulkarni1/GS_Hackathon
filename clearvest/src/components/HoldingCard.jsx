@@ -2,7 +2,7 @@ import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
 const BADGE_STYLES = {
   great:  { bg: 'bg-emerald-50',  text: 'text-emerald-700',  border: 'border-emerald-100', label: 'Doing Great' },
-  steady: { bg: 'bg-blue-50',     text: 'text-blue-700',     border: 'border-blue-100',    label: 'Steady' },
+  steady: { bg: 'bg-amber-50',    text: 'text-amber-700',    border: 'border-amber-100',   label: 'Steady' },
   watch:  { bg: 'bg-amber-50',    text: 'text-amber-700',    border: 'border-amber-100',   label: 'Keep an Eye' },
   down:   { bg: 'bg-rose-50',     text: 'text-rose-700',     border: 'border-rose-100',    label: 'Struggling' },
 };
