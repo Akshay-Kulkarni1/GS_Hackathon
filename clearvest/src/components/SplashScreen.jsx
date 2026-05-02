@@ -5,8 +5,8 @@ export default function SplashScreen({ onFinish }) {
   const [exiting, setExiting] = useState(false);
 
   useEffect(() => {
-    const exitTimer = setTimeout(() => setExiting(true), 1700);
-    const finishTimer = setTimeout(() => onFinish(), 2200);
+    const exitTimer = setTimeout(() => setExiting(true), 1500);
+    const finishTimer = setTimeout(() => onFinish(), 2000);
     return () => {
       clearTimeout(exitTimer);
       clearTimeout(finishTimer);
@@ -17,7 +17,7 @@ export default function SplashScreen({ onFinish }) {
     <div
       className={`
         fixed inset-0 z-50 flex flex-col items-center justify-center
-        bg-gradient-to-br from-white via-white to-emerald-50/40
+        bg-gradient-to-br from-white via-white to-emerald-50/50
         ${exiting ? 'splash-exit' : ''}
       `}
     >

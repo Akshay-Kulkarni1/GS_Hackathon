@@ -1,4 +1,5 @@
-import { TrendingUp, ArrowRight, Wallet, BarChart3, Hand } from 'lucide-react';
+import { TrendingUp, ArrowRight, Wallet, BarChart3, Hand, Loader } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { useInvestor } from '../context/InvestorContext';
 import BottomNav from '../components/BottomNav';
@@ -6,9 +7,9 @@ import HealthScore from '../components/HealthScore';
 import HoldingCard from '../components/HoldingCard';
 
 // ── Asset allocation donut data ─────────────────────
-const ALLOCATION_DATA = [
+const DEFAULT_ALLOCATION_DATA = [
   { name: 'Stocks',       value: 40, key: 'stocks' },
-  { name: 'Mutual Funds', value: 45, key: 'mutualfunds' },
+  { name: 'Mutual Funds', value: 45, key: 'mutualFunds' },
   { name: 'Bonds',        value: 10, key: 'bonds' },
   { name: 'Cash',         value: 5,  key: 'cash' },
 ];
@@ -59,11 +60,52 @@ function CustomTooltip({ active, payload }) {
 
 // ── Main Dashboard ──────────────────────────────────
 export default function PortfolioScreen() {
-  const { profile, setCurrentScreen, navigateTab } = useInvestor();
+  const { profile, allocation, setCurrentScreen, setActiveTab, navigateTab } = useInvestor();
+  const [isLoading, setIsLoading] = useState(true);
 
-  if (!profile) return null;
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 250);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (!profile) {
+    return (
+      <div className="min-h-screen bg-gray-50/40 flex flex-col items-center justify-center px-6">
+        <div className="w-full max-w-md bg-white border border-gray-100 rounded-2xl shadow-sm p-6 text-center">
+          <p className="text-base font-semibold text-gray-700">Setting up your dashboard...</p>
+          <button
+            onClick={() => {
+              setActiveTab('dashboard');
+              setCurrentScreen('onboarding');
+            }}
+            className="mt-4 inline-flex items-center justify-center px-4 py-2 rounded-xl bg-brand-600 text-white text-sm font-semibold hover:bg-brand-700 transition-colors"
+          >
+            Complete Setup
+          </button>
+        </div>
+      </div>
+    );
+  }
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50/40 flex items-center justify-center">
+        <div className="inline-flex items-center gap-2 text-gray-500">
+          <Loader className="w-5 h-5 animate-spin text-brand-600" />
+          <span className="text-sm font-semibold">Loading your dashboard...</span>
+        </div>
+      </div>
+    );
+  }
 
   const greeting = getGreeting();
+  const allocationData = allocation
+    ? [
+        { name: 'Stocks', value: allocation.stocks, key: 'stocks' },
+        { name: 'Mutual Funds', value: allocation.mutualFunds, key: 'mutualFunds' },
+        { name: 'Bonds', value: allocation.bonds, key: 'bonds' },
+        { name: 'Cash', value: allocation.cash, key: 'cash' },
+      ]
+    : DEFAULT_ALLOCATION_DATA;
 
   return (
     <div className="min-h-screen bg-gray-50/40 flex flex-col pb-24">
@@ -79,7 +121,10 @@ export default function PortfolioScreen() {
             </span>
           </div>
           <button
-            onClick={() => setCurrentScreen('onboarding')}
+            onClick={() => {
+              setActiveTab('dashboard');
+              setCurrentScreen('onboarding');
+            }}
             className="text-xs font-medium text-gray-400 hover:text-gray-600 transition-colors cursor-pointer px-3 py-1.5 rounded-lg hover:bg-gray-50"
           >
             Edit Profile
@@ -107,7 +152,7 @@ export default function PortfolioScreen() {
                   <div className="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center">
                     <Wallet className="w-5 h-5 text-brand-600" strokeWidth={2} />
                   </div>
-                  <span className="text-sm font-medium text-gray-400">Total Value</span>
+                  <span className="text-sm font-medium text-gray-400">Total Money Value</span>
                 </div>
                 <p className="text-3xl font-extrabold text-gray-900 tracking-tight">$28,000</p>
               </div>
@@ -118,7 +163,7 @@ export default function PortfolioScreen() {
                   <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
                     <TrendingUp className="w-5 h-5 text-emerald-500" strokeWidth={2} />
                   </div>
-                  <span className="text-sm font-medium text-gray-400">You've Earned</span>
+                  <span className="text-sm font-medium text-gray-400">Total Gain So Far</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <p className="text-3xl font-extrabold text-emerald-600 tracking-tight">+$3,200</p>
@@ -134,10 +179,10 @@ export default function PortfolioScreen() {
           <HealthScore score={74} />
 
           {/* ── Asset Allocation Donut ── */}
-          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-gray-100 shadow-sm animate-slide-up">
+          <div className="bg-white rounded-2xl p-6 sm:p-8 border border-gray-100 shadow-sm animate-slide-up">
             <div className="flex items-center gap-2 mb-6">
               <BarChart3 className="w-5 h-5 text-gray-400" />
-              <h2 className="text-lg font-bold text-gray-800">How Your Money is Spread</h2>
+            <h2 className="text-lg font-bold text-gray-800">How Your Money Is Split</h2>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 items-center">
@@ -146,7 +191,7 @@ export default function PortfolioScreen() {
                 <ResponsiveContainer width="100%" height={240}>
                   <PieChart>
                     <Pie
-                      data={ALLOCATION_DATA}
+                      data={allocationData}
                       cx="50%"
                       cy="50%"
                       innerRadius={65}
@@ -155,7 +200,7 @@ export default function PortfolioScreen() {
                       dataKey="value"
                       strokeWidth={0}
                     >
-                      {ALLOCATION_DATA.map((entry, index) => (
+                      {allocationData.map((entry, index) => (
                         <Cell key={entry.key} fill={DONUT_COLORS[index]} />
                       ))}
                     </Pie>
@@ -175,7 +220,7 @@ export default function PortfolioScreen() {
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-semibold text-gray-700">{item.label}</span>
-                        <span className="text-sm font-bold text-gray-900">{ALLOCATION_DATA[i].value}%</span>
+                        <span className="text-sm font-bold text-gray-900">{allocationData[i].value}%</span>
                       </div>
                       <p className="text-xs text-gray-400 mt-0.5">{item.desc}</p>
                     </div>
@@ -188,7 +233,7 @@ export default function PortfolioScreen() {
           {/* ── Stocks Holdings ── */}
           <div className="animate-slide-up" style={{ animationDelay: '100ms', animationFillMode: 'both' }}>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-gray-800">Stocks</h2>
+              <h2 className="text-lg font-bold text-gray-800">Company Shares</h2>
               <span className="text-xs font-semibold text-gray-400 bg-gray-50 px-3 py-1 rounded-full">
                 {STOCKS.length} holdings
               </span>
@@ -210,7 +255,7 @@ export default function PortfolioScreen() {
           {/* ── Mutual Funds Holdings ── */}
           <div className="animate-slide-up" style={{ animationDelay: '200ms', animationFillMode: 'both' }}>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-gray-800">Mutual Funds</h2>
+              <h2 className="text-lg font-bold text-gray-800">Managed Funds</h2>
               <span className="text-xs font-semibold text-gray-400 bg-gray-50 px-3 py-1 rounded-full">
                 {MUTUAL_FUNDS.length} holdings
               </span>
@@ -255,7 +300,7 @@ export default function PortfolioScreen() {
 
           {/* Disclaimer */}
           <p className="text-center text-xs text-gray-300 pb-4">
-            This is for learning purposes only, not professional advice. What happened in the past may not happen again.
+            This app is a helpful guide, not personalized professional advice.
           </p>
 
         </div>

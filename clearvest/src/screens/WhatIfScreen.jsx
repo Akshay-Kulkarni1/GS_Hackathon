@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import {
   TrendingDown, Flame, Wallet, TrendingUp,
   ArrowLeft, ArrowRight, Loader, Bot, RefreshCw, Sparkles,
@@ -183,14 +183,22 @@ function MiniDonut({ data, title }) {
 // MAIN COMPONENT
 // ─────────────────────────────────────────────────────
 export default function WhatIfScreen() {
-  const { profile, answers, navigateTab } = useInvestor();
+  const { profile, answers, allocation, navigateTab, setCurrentScreen, setActiveTab } = useInvestor();
+  const [isLoading, setIsLoading] = useState(true);
 
   const [selectedScenario, setSelectedScenario] = useState(null);
   const [severity, setSeverity] = useState(null);
   const [aiResponse, setAiResponse] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState(false);
+  const [aiErrorMessage, setAiErrorMessage] = useState('Your advisor is taking a break. Try again in a moment.');
 
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 250);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const currentAllocation = allocation || CURRENT;
   const rebalanceKey = selectedScenario && severity ? `${selectedScenario}-${severity}` : null;
   const suggested = rebalanceKey ? REBALANCE[rebalanceKey] : null;
   const actions = rebalanceKey ? ACTIONS[rebalanceKey] : [];
@@ -198,15 +206,24 @@ export default function WhatIfScreen() {
   // ── Groq AI call ──────────────────────────────────
   const fetchAiExplanation = useCallback(async () => {
     if (!profile || !selectedScenario || !severity || !suggested) return;
+    const apiKey = import.meta.env.VITE_GROQ_API_KEY;
 
     setAiLoading(true);
     setAiError(false);
+    setAiErrorMessage('Your advisor is taking a break. Try again in a moment.');
     setAiResponse(null);
+
+    if (!apiKey) {
+      setAiError(true);
+      setAiErrorMessage('AI Advisor unavailable. Add your API key to enable this feature.');
+      setAiLoading(false);
+      return;
+    }
 
     const scenarioLabel = SCENARIOS.find(s => s.id === selectedScenario)?.label || selectedScenario;
     const severityLabel = SEVERITIES.find(s => s.id === severity)?.label || severity;
     const changes = Object.entries(suggested)
-      .map(([k, v]) => `${LABELS[k]}: ${CURRENT[k]}% → ${v}%`)
+      .map(([k, v]) => `${LABELS[k]}: ${currentAllocation[k]}% → ${v}%`)
       .join(', ');
 
     try {
@@ -214,7 +231,7 @@ export default function WhatIfScreen() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_GROQ_API_KEY || 'YOUR_GROQ_API_KEY'}`,
+          'Authorization': `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
           model: 'meta-llama/llama-4-scout-17b-16e-instruct',
@@ -225,7 +242,7 @@ export default function WhatIfScreen() {
             },
             {
               role: 'user',
-              content: `The investor profile is: ${profile.name} (${profile.desc}). They selected this scenario: "${scenarioLabel}" at severity: "${severityLabel}". The suggested portfolio changes are: ${changes}. Explain in 3-4 simple sentences why these changes make sense for them personally.`,
+              content: `The investor profile is: ${profile.name} (${profile.desc}). Their risk level is ${answers.risk}, goal is ${answers.goal}, and timeline is ${answers.timeline}. They selected this scenario: "${scenarioLabel}" at severity: "${severityLabel}". The suggested money mix changes are: ${changes}. Explain in 3-4 simple sentences why these changes make sense for them personally.`,
             },
           ],
           max_tokens: 300,
@@ -238,13 +255,13 @@ export default function WhatIfScreen() {
       const text = data.choices?.[0]?.message?.content;
       if (!text) throw new Error('Empty response');
       setAiResponse(text);
-    } catch (err) {
-      console.error('Groq API error:', err);
+    } catch {
       setAiError(true);
+      setAiErrorMessage('Your advisor is taking a break. Try again in a moment.');
     } finally {
       setAiLoading(false);
     }
-  }, [profile, selectedScenario, severity, suggested]);
+  }, [profile, answers, selectedScenario, severity, suggested, currentAllocation]);
 
   // ── Handle scenario selection ─────────────────────
   const handleScenario = (id) => {
@@ -252,6 +269,7 @@ export default function WhatIfScreen() {
     setSeverity(null);
     setAiResponse(null);
     setAiError(false);
+    setAiErrorMessage('Your advisor is taking a break. Try again in a moment.');
   };
 
   // ── Handle severity selection ─────────────────────
@@ -259,12 +277,43 @@ export default function WhatIfScreen() {
     setSeverity(id);
     setAiResponse(null);
     setAiError(false);
+    setAiErrorMessage('Your advisor is taking a break. Try again in a moment.');
   };
 
   // ── Auto-fetch AI when both are set ───────────────
   // We don't auto-fetch — the user sees charts + actions first,
   // then the AI box appears with a "Get AI advice" button or auto-loads.
   const shouldShowResults = selectedScenario && severity && suggested;
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50/40 flex items-center justify-center">
+        <div className="inline-flex items-center gap-2 text-gray-500">
+          <Loader className="w-5 h-5 animate-spin text-brand-600" />
+          <span className="text-sm font-semibold">Loading your scenario tool...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="min-h-screen bg-gray-50/40 flex items-center justify-center px-6">
+        <div className="w-full max-w-md bg-white border border-gray-100 rounded-2xl shadow-sm p-6 text-center">
+          <p className="text-base font-semibold text-gray-700">Please complete your profile first</p>
+          <button
+            onClick={() => {
+              setActiveTab('dashboard');
+              setCurrentScreen('onboarding');
+            }}
+            className="mt-4 inline-flex items-center justify-center px-4 py-2 rounded-xl bg-brand-600 text-white text-sm font-semibold hover:bg-brand-700 transition-colors"
+          >
+            Go to Setup
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50/40 flex flex-col pb-24">
@@ -295,9 +344,9 @@ export default function WhatIfScreen() {
 
           {/* ── Title ── */}
           <div className="text-center animate-fade-in">
-            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">What If...?</h1>
+            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">What Could Happen?</h1>
             <p className="text-gray-400 text-base sm:text-lg max-w-md mx-auto leading-relaxed">
-              See how different situations affect your money and what to do about it
+              {profile.name}, see how different situations could affect your money and what you can do next.
             </p>
           </div>
 
@@ -375,14 +424,14 @@ export default function WhatIfScreen() {
             <div className="space-y-6 animate-fade-in">
 
               {/* ── Side-by-side Donut Charts ── */}
-              <div className="bg-white rounded-3xl p-6 sm:p-8 border border-gray-100 shadow-sm">
+              <div className="bg-white rounded-2xl p-6 sm:p-8 border border-gray-100 shadow-sm">
                 <div className="flex items-center gap-2 mb-4">
                   <Sparkles className="w-4 h-4 text-brand-400" />
                   <h3 className="text-base font-bold text-gray-800">How Your Mix Would Change</h3>
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-4 items-stretch">
-                  <MiniDonut data={toChartData(CURRENT)} title="Your portfolio NOW" />
+                  <MiniDonut data={toChartData(currentAllocation)} title="Your money mix now" />
 
                   {/* Arrow between */}
                   <div className="flex items-center justify-center sm:py-12">
@@ -391,13 +440,13 @@ export default function WhatIfScreen() {
                     </div>
                   </div>
 
-                  <MiniDonut data={toChartData(suggested)} title="Suggested portfolio" />
+                  <MiniDonut data={toChartData(suggested)} title="Suggested money mix" />
                 </div>
 
                 {/* Change summary chips */}
                 <div className="flex flex-wrap justify-center gap-2 mt-5 pt-5 border-t border-gray-50">
                   {Object.entries(suggested).map(([key, val], i) => {
-                    const diff = val - CURRENT[key];
+                    const diff = val - currentAllocation[key];
                     if (diff === 0) return null;
                     return (
                       <span
@@ -415,8 +464,8 @@ export default function WhatIfScreen() {
               </div>
 
               {/* ── Action List ── */}
-              <div className="bg-white rounded-3xl p-6 sm:p-8 border border-gray-100 shadow-sm">
-                <h3 className="text-base font-bold text-gray-800 mb-4">What we'd suggest</h3>
+              <div className="bg-white rounded-2xl p-6 sm:p-8 border border-gray-100 shadow-sm">
+                <h3 className="text-base font-bold text-gray-800 mb-4">What we suggest</h3>
                 <ul className="space-y-3">
                   {actions.map((action, i) => (
                     <li
@@ -434,7 +483,7 @@ export default function WhatIfScreen() {
               </div>
 
               {/* ── AI Advisor Box ── */}
-              <div className="bg-gradient-to-br from-brand-50/80 to-white rounded-3xl p-6 sm:p-8 border border-brand-100/50 shadow-sm">
+              <div className="bg-gradient-to-br from-brand-50/80 to-white rounded-2xl p-6 sm:p-8 border border-brand-100/50 shadow-sm">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-xl bg-brand-100 flex items-center justify-center">
                     <Bot className="w-5 h-5 text-brand-600" strokeWidth={2} />
@@ -489,7 +538,7 @@ export default function WhatIfScreen() {
 
                 {aiError && (
                   <div className="flex flex-col items-center gap-3 py-6 animate-fade-in">
-                    <p className="text-sm text-gray-400">Your advisor is taking a break. Try again in a moment.</p>
+                    <p className="text-sm text-gray-400">{aiErrorMessage}</p>
                     <button
                       onClick={fetchAiExplanation}
                       className="

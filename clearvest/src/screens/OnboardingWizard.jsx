@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, Loader } from 'lucide-react';
 import ProgressBar from '../components/ProgressBar';
 import StepRisk from '../steps/StepRisk';
 import StepGoal from '../steps/StepGoal';
@@ -12,18 +12,26 @@ const TOTAL_STEPS = 3;
 export default function OnboardingWizard() {
   const [step, setStep] = useState(1);
   const [direction, setDirection] = useState('forward'); // 'forward' | 'back'
-  const { answers } = useInvestor();
+  const [stepLoading, setStepLoading] = useState(false);
 
   const showResult = step > TOTAL_STEPS;
 
   const handleNext = () => {
+    setStepLoading(true);
     setDirection('forward');
-    setStep(prev => prev + 1);
+    setTimeout(() => {
+      setStep(prev => prev + 1);
+      setStepLoading(false);
+    }, 220);
   };
 
   const handleBack = () => {
+    setStepLoading(true);
     setDirection('back');
-    setStep(prev => Math.max(1, prev - 1));
+    setTimeout(() => {
+      setStep(prev => Math.max(1, prev - 1));
+      setStepLoading(false);
+    }, 220);
   };
 
   // Use step as key to force re-mount and trigger animation on each step change
@@ -66,12 +74,21 @@ export default function OnboardingWizard() {
           )}
 
           {/* Steps — keyed for transition animation */}
-          <div key={step} className={animationClass}>
-            {step === 1 && <StepRisk onNext={handleNext} />}
-            {step === 2 && <StepGoal onNext={handleNext} />}
-            {step === 3 && <StepTimeline onNext={handleNext} />}
-            {showResult && <ResultScreen />}
-          </div>
+          {stepLoading ? (
+            <div className="w-full min-h-[280px] flex items-center justify-center animate-fade-in">
+              <div className="inline-flex items-center gap-2 text-gray-500">
+                <Loader className="w-5 h-5 animate-spin text-brand-600" />
+                <span className="text-sm font-semibold">Loading next step...</span>
+              </div>
+            </div>
+          ) : (
+            <div key={step} className={animationClass}>
+              {step === 1 && <StepRisk onNext={handleNext} />}
+              {step === 2 && <StepGoal onNext={handleNext} />}
+              {step === 3 && <StepTimeline onNext={handleNext} />}
+              {showResult && <ResultScreen />}
+            </div>
+          )}
         </div>
       </main>
 

@@ -59,18 +59,18 @@ function getProfile(risk, goal, timeline) {
 // Map risk levels to portfolio allocation recommendations
 function getPortfolioAllocation(risk, timeline) {
   const allocations = {
-    'safe-short':   { stocks: 15, bonds: 60, savings: 20, alternatives: 5 },
-    'safe-medium':  { stocks: 25, bonds: 55, savings: 15, alternatives: 5 },
-    'safe-long':    { stocks: 40, bonds: 45, savings: 10, alternatives: 5 },
-    'middle-short': { stocks: 30, bonds: 45, savings: 15, alternatives: 10 },
-    'middle-medium':{ stocks: 50, bonds: 30, savings: 10, alternatives: 10 },
-    'middle-long':  { stocks: 65, bonds: 20, savings: 5, alternatives: 10 },
-    'bold-short':   { stocks: 55, bonds: 25, savings: 10, alternatives: 10 },
-    'bold-medium':  { stocks: 70, bonds: 15, savings: 5, alternatives: 10 },
-    'bold-long':    { stocks: 80, bonds: 8, savings: 2, alternatives: 10 },
+    'safe-short':   { stocks: 15, mutualFunds: 20, bonds: 60, cash: 5 },
+    'safe-medium':  { stocks: 25, mutualFunds: 20, bonds: 50, cash: 5 },
+    'safe-long':    { stocks: 40, mutualFunds: 25, bonds: 30, cash: 5 },
+    'middle-short': { stocks: 30, mutualFunds: 35, bonds: 25, cash: 10 },
+    'middle-medium':{ stocks: 50, mutualFunds: 30, bonds: 15, cash: 5 },
+    'middle-long':  { stocks: 65, mutualFunds: 25, bonds: 8, cash: 2 },
+    'bold-short':   { stocks: 55, mutualFunds: 25, bonds: 15, cash: 5 },
+    'bold-medium':  { stocks: 70, mutualFunds: 20, bonds: 8, cash: 2 },
+    'bold-long':    { stocks: 80, mutualFunds: 15, bonds: 3, cash: 2 },
   };
   const key = `${risk}-${timeline}`;
-  return allocations[key] || { stocks: 50, bonds: 30, savings: 10, alternatives: 10 };
+  return allocations[key] || { stocks: 50, mutualFunds: 25, bonds: 20, cash: 5 };
 }
 
 export function InvestorProvider({ children }) {

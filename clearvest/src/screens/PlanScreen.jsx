@@ -1,100 +1,79 @@
+import { useEffect, useState } from 'react';
 import {
   Shield, Target, Clock, Calendar, Leaf, Home, Sun, TrendingUp,
-  CheckCircle2, Lightbulb, ArrowRight, ArrowLeft, Sparkles,
+  CheckCircle2, Lightbulb, ArrowRight, ArrowLeft, Sparkles, Loader,
 } from 'lucide-react';
 import { useInvestor } from '../context/InvestorContext';
 import BottomNav from '../components/BottomNav';
 
 // ── Map onboarding answers to user-friendly labels + icons ──
 const RISK_MAP = {
-  safe:   { label: 'Play it Safe',    icon: Shield,      color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200' },
-  middle: { label: 'Middle Ground',   icon: Target,      color: 'text-amber-600',   bg: 'bg-amber-50',   border: 'border-amber-200' },
-  bold:   { label: 'Go Bold',         icon: TrendingUp,  color: 'text-rose-600',    bg: 'bg-rose-50',    border: 'border-rose-200' },
+  safe: { label: 'Safe', icon: Shield, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200' },
+  middle: { label: 'Balanced', icon: Target, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200' },
+  bold: { label: 'Bold', icon: TrendingUp, color: 'text-rose-600', bg: 'bg-rose-50', border: 'border-rose-200' },
 };
 
 const GOAL_MAP = {
-  home:      { label: 'Buy a Home',              icon: Home,       color: 'text-brand-600', bg: 'bg-brand-50' },
-  retire:    { label: 'Retire Comfortably',       icon: Sun,        color: 'text-brand-600', bg: 'bg-brand-50' },
-  growth:    { label: 'Grow My Wealth',           icon: TrendingUp, color: 'text-brand-600', bg: 'bg-brand-50' },
-  emergency: { label: 'Build an Emergency Fund',  icon: Shield,     color: 'text-brand-600', bg: 'bg-brand-50' },
+  home: { label: 'Home', icon: Home, color: 'text-brand-600', bg: 'bg-brand-50' },
+  retire: { label: 'Retire', icon: Sun, color: 'text-brand-600', bg: 'bg-brand-50' },
+  growth: { label: 'Growth', icon: TrendingUp, color: 'text-brand-600', bg: 'bg-brand-50' },
+  emergency: { label: 'Emergency', icon: Shield, color: 'text-brand-600', bg: 'bg-brand-50' },
 };
 
 const TIMELINE_MAP = {
-  short:  { label: 'Within 2 Years',   icon: Clock,    color: 'text-brand-600', bg: 'bg-brand-50' },
-  medium: { label: '3 to 5 Years',     icon: Calendar, color: 'text-brand-600', bg: 'bg-brand-50' },
-  long:   { label: '10 Years or More', icon: Leaf,     color: 'text-brand-600', bg: 'bg-brand-50' },
+  short: { label: '2 years', icon: Clock, color: 'text-brand-600', bg: 'bg-brand-50' },
+  medium: { label: '5 years', icon: Calendar, color: 'text-brand-600', bg: 'bg-brand-50' },
+  long: { label: '10 years', icon: Leaf, color: 'text-brand-600', bg: 'bg-brand-50' },
 };
 
 // ── Profile-aware tips ──────────────────────────────
 function getTips(risk, goal, timeline) {
   const tips = [];
+  if (risk === 'safe') tips.push('Keep most of your money in safer options so big market moves do not shake your plan.');
+  if (risk === 'middle') tips.push('Use a balanced mix so your money can grow while still feeling steady.');
+  if (risk === 'bold') tips.push('Because you chose bold, keep a small safety cushion so you can stay calm in rough weeks.');
 
-  // Risk-based tip
-  if (risk === 'safe') {
-    tips.push('Since you prefer safety, keep most of your money in steady, reliable options that won\'t bounce around too much.');
-  } else if (risk === 'middle') {
-    tips.push('You\'re comfortable with some ups and downs, so a healthy mix of growth and safety is the way to go.');
-  } else {
-    tips.push('You\'re ready for bigger swings in exchange for bigger potential rewards. Just make sure you won\'t need this money unexpectedly.');
-  }
+  if (goal === 'home' && timeline === 'short') tips.push('Since you want a home soon, keep at least 20% in safe, easy-to-access funds.');
+  if (goal === 'retire') tips.push('For retirement, add money on a schedule so progress stays steady month after month.');
+  if (goal === 'growth') tips.push('For growth, spread money across different types of funds so one drop does not hurt everything.');
+  if (goal === 'emergency') tips.push('For an emergency goal, build a cash buffer first, then add small growth options later.');
 
-  // Goal-based tip
-  if (goal === 'home') {
-    if (timeline === 'short') tips.push('Since you want to buy a home soon, keep at least 20% in safe, easy-to-access savings so your down payment is ready when you are.');
-    else if (timeline === 'medium') tips.push('With a few years before buying, you can grow your down payment fund while slowly shifting to safer options as you get closer.');
-    else tips.push('You have time on your side for homeownership. Let your money grow for now, and we\'ll shift to safer ground as the purchase date nears.');
-  } else if (goal === 'retire') {
-    if (timeline === 'short') tips.push('Retirement is close, so focus on protecting what you\'ve built. Lean toward steady, reliable options that preserve your savings.');
-    else if (timeline === 'medium') tips.push('With a few years until retirement, start gradually moving from growth-focused to more stable options.');
-    else tips.push('Retirement is far off, so you can afford to focus on growth now. Time will smooth out the bumps along the way.');
-  } else if (goal === 'growth') {
-    if (timeline === 'short') tips.push('For short-term growth, focus on opportunities that can move quickly but keep some cash handy in case you need to pivot.');
-    else if (timeline === 'medium') tips.push('A few years gives you room to ride out short-term dips while your money grows. Stay diversified.');
-    else tips.push('Long-term growth is all about patience. Stay invested, stay diversified, and let time do the heavy lifting.');
-  } else {
-    if (timeline === 'short') tips.push('For a quick emergency fund, prioritize safe, instantly accessible savings. Every dollar counts right now.');
-    else if (timeline === 'medium') tips.push('You\'ve got time to build a strong safety net. Mix mostly safe options with a small growth component.');
-    else tips.push('A long-horizon emergency fund can afford some growth exposure. Keep the core in safe options and let the rest build value.');
-  }
+  if (timeline === 'long') tips.push('You have time on your side, so consistency matters more than short-term noise.');
+  if (timeline !== 'long') tips.push('Because your timeline is closer, review your money mix every month and keep it simple.');
 
-  // Universal tip
-  tips.push('Check in on your plan every few months. Life changes, and your money plan should change with it.');
-
-  return tips;
+  return tips.slice(0, 3);
 }
 
 // ── Next steps based on profile ─────────────────────
 function getNextSteps(risk, goal, timeline) {
-  const steps = [];
+  const firstStep = goal === 'home'
+    ? { text: 'Open a dedicated home savings bucket and set an automatic weekly transfer.', icon: Home }
+    : goal === 'retire'
+      ? { text: 'Increase your retirement contribution by a small amount this month.', icon: Sun }
+      : goal === 'growth'
+        ? { text: 'Start a simple recurring investment so your money grows consistently.', icon: TrendingUp }
+        : { text: 'Build your emergency cash target first before taking extra risk.', icon: Shield };
 
-  if (goal === 'home') {
-    steps.push({ text: 'Set up automatic transfers to a dedicated "Home Fund" savings account', icon: Home });
-  } else if (goal === 'retire') {
-    steps.push({ text: 'Review your current retirement contributions and see if you can increase them', icon: Sun });
-  } else if (goal === 'growth') {
-    steps.push({ text: 'Start with a small amount in a diversified fund and add regularly', icon: TrendingUp });
-  } else {
-    steps.push({ text: 'Open a high-yield savings account and set up weekly automatic deposits', icon: Shield });
-  }
+  const secondStep = risk === 'bold'
+    ? { text: 'Use the What Could Happen tool to stress-test your plan once a month.', icon: Target }
+    : { text: 'Keep your mix close to your comfort level and avoid sudden changes.', icon: Target };
 
-  if (risk === 'bold') {
-    steps.push({ text: 'Explore the What-If tool to stress-test your portfolio against market dips', icon: Target });
-  } else {
-    steps.push({ text: 'Review your current mix to make sure it matches your comfort level', icon: Target });
-  }
+  const thirdStep = timeline === 'short'
+    ? { text: 'Check progress every month and keep enough cash ready for near-term needs.', icon: Clock }
+    : { text: 'Check progress every quarter and stay consistent with your contributions.', icon: Calendar };
 
-  if (timeline === 'short') {
-    steps.push({ text: 'Set calendar reminders to check your progress every month', icon: Clock });
-  } else {
-    steps.push({ text: 'Set calendar reminders to check your progress every quarter', icon: Calendar });
-  }
-
-  return steps;
+  return [firstStep, secondStep, thirdStep];
 }
 
 // ── Main Component ──────────────────────────────────
 export default function PlanScreen() {
   const { profile, answers, navigateTab } = useInvestor();
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 250);
+    return () => clearTimeout(timer);
+  }, []);
 
   if (!profile || !answers.risk || !answers.goal || !answers.timeline) {
     return (
@@ -136,6 +115,17 @@ export default function PlanScreen() {
   const GoalIcon = goalInfo.icon;
   const TimelineIcon = timelineInfo.icon;
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50/40 flex items-center justify-center">
+        <div className="inline-flex items-center gap-2 text-gray-500">
+          <Loader className="w-5 h-5 animate-spin text-brand-600" />
+          <span className="text-sm font-semibold">Loading your personal plan...</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50/40 flex flex-col pb-24">
       {/* ── Header ── */}
@@ -166,13 +156,13 @@ export default function PlanScreen() {
           {/* ── Title + Profile ── */}
           <div className="text-center animate-fade-in">
             <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">Your Personal Plan</h1>
-            <p className="text-gray-400 text-base sm:text-lg max-w-md mx-auto leading-relaxed">
-              A roadmap built just for you, {profile.name}
+            <p className="text-gray-400 text-base sm:text-lg max-w-xl mx-auto leading-relaxed">
+              {profile.name}: {profile.desc}
             </p>
           </div>
 
           {/* ── Profile Card ── */}
-          <div className="bg-gradient-to-br from-brand-50/80 to-white rounded-3xl p-6 sm:p-8 border border-brand-100/50 shadow-sm animate-slide-up">
+          <div className="bg-gradient-to-br from-brand-50/80 to-white rounded-2xl p-6 sm:p-8 border border-brand-100/50 shadow-sm animate-slide-up">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-12 h-12 rounded-xl bg-brand-100 flex items-center justify-center">
                 <Sparkles className="w-6 h-6 text-brand-600" strokeWidth={1.5} />
@@ -184,46 +174,38 @@ export default function PlanScreen() {
             </div>
           </div>
 
-          {/* ── Your Choices ── */}
+          {/* ── Goal Cards ── */}
           <div className="space-y-3 animate-slide-up" style={{ animationDelay: '100ms', animationFillMode: 'both' }}>
-            <h3 className="text-base font-bold text-gray-700 mb-3">Your choices</h3>
+            <h3 className="text-base font-bold text-gray-700 mb-3">Your focus cards</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className={`p-4 rounded-2xl bg-white border ${riskInfo.border} shadow-sm`}>
+                <div className={`w-10 h-10 rounded-xl ${riskInfo.bg} flex items-center justify-center mb-3`}>
+                  <RiskIcon className={`w-5 h-5 ${riskInfo.color}`} strokeWidth={2} />
+                </div>
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Risk level</p>
+                <p className="text-base font-bold text-gray-800">{riskInfo.label}</p>
+              </div>
 
-            {/* Risk */}
-            <div className={`flex items-center gap-4 p-4 rounded-2xl bg-white border ${riskInfo.border} shadow-sm`}>
-              <div className={`w-11 h-11 rounded-xl ${riskInfo.bg} flex items-center justify-center`}>
-                <RiskIcon className={`w-5 h-5 ${riskInfo.color}`} strokeWidth={2} />
+              <div className="p-4 rounded-2xl bg-white border border-gray-100 shadow-sm">
+                <div className={`w-10 h-10 rounded-xl ${goalInfo.bg} flex items-center justify-center mb-3`}>
+                  <GoalIcon className={`w-5 h-5 ${goalInfo.color}`} strokeWidth={2} />
+                </div>
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Main goal</p>
+                <p className="text-base font-bold text-gray-800">{goalInfo.label}</p>
               </div>
-              <div className="flex-1">
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Risk Level</p>
-                <p className="text-sm font-bold text-gray-800">{riskInfo.label}</p>
-              </div>
-            </div>
 
-            {/* Goal */}
-            <div className="flex items-center gap-4 p-4 rounded-2xl bg-white border border-gray-100 shadow-sm">
-              <div className={`w-11 h-11 rounded-xl ${goalInfo.bg} flex items-center justify-center`}>
-                <GoalIcon className={`w-5 h-5 ${goalInfo.color}`} strokeWidth={2} />
-              </div>
-              <div className="flex-1">
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Goal</p>
-                <p className="text-sm font-bold text-gray-800">{goalInfo.label}</p>
-              </div>
-            </div>
-
-            {/* Timeline */}
-            <div className="flex items-center gap-4 p-4 rounded-2xl bg-white border border-gray-100 shadow-sm">
-              <div className={`w-11 h-11 rounded-xl ${timelineInfo.bg} flex items-center justify-center`}>
-                <TimelineIcon className={`w-5 h-5 ${timelineInfo.color}`} strokeWidth={2} />
-              </div>
-              <div className="flex-1">
+              <div className="p-4 rounded-2xl bg-white border border-gray-100 shadow-sm">
+                <div className={`w-10 h-10 rounded-xl ${timelineInfo.bg} flex items-center justify-center mb-3`}>
+                  <TimelineIcon className={`w-5 h-5 ${timelineInfo.color}`} strokeWidth={2} />
+                </div>
                 <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Timeline</p>
-                <p className="text-sm font-bold text-gray-800">{timelineInfo.label}</p>
+                <p className="text-base font-bold text-gray-800">{timelineInfo.label}</p>
               </div>
             </div>
           </div>
 
           {/* ── What We Recommend ── */}
-          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-gray-100 shadow-sm animate-slide-up" style={{ animationDelay: '200ms', animationFillMode: 'both' }}>
+          <div className="bg-white rounded-2xl p-6 sm:p-8 border border-gray-100 shadow-sm animate-slide-up" style={{ animationDelay: '200ms', animationFillMode: 'both' }}>
             <div className="flex items-center gap-2 mb-5">
               <Lightbulb className="w-5 h-5 text-amber-400" />
               <h3 className="text-base font-bold text-gray-800">What we recommend for you</h3>
@@ -245,7 +227,7 @@ export default function PlanScreen() {
           </div>
 
           {/* ── Your Next Steps ── */}
-          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-gray-100 shadow-sm animate-slide-up" style={{ animationDelay: '300ms', animationFillMode: 'both' }}>
+          <div className="bg-white rounded-2xl p-6 sm:p-8 border border-gray-100 shadow-sm animate-slide-up" style={{ animationDelay: '300ms', animationFillMode: 'both' }}>
             <div className="flex items-center gap-2 mb-5">
               <ArrowRight className="w-5 h-5 text-brand-500" />
               <h3 className="text-base font-bold text-gray-800">Your next steps</h3>
@@ -293,7 +275,7 @@ export default function PlanScreen() {
 
           {/* Disclaimer */}
           <p className="text-center text-xs text-gray-300 pb-4">
-            This plan is a starting point, not professional financial advice. Consider speaking with an advisor for personalized guidance.
+            This plan is a helpful starting point and should be adapted to your real-life needs.
           </p>
 
         </div>
